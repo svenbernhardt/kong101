@@ -1,0 +1,45 @@
+= Workshop: Kong 101 - Getting started with Kong API Gateway
+:imagesdir: images
+
+NOTE: Remarks with respect to the workshop prerequisites are given in xref:00_prerequisites.adoc[Prerequisites].
+
+== Demo scenario structure
+
+The image below gives an overview on what we're going to create during this workshop.
+
+image::demo_scenario.svg[static]
+
+== Outline
+
+. Introduction (20 minutes)
+
+- Welcome and overview
+- Introduction to API Gateway concept
+- Kong basic concepts
+- Architectural considerations
+
+. xref:01_start_up_and_explore_demo_environment.adoc[Start up and explore Kong] (15 minutes)
+
+- Starting up the environment
+- Validating and exploring the environment
+
+. xref:02_create_route_and_service.adoc[Create your first API] (15 minutes)
+
+- Creating a service
+- Creating two routes
+- Testing the API
+
+. xref:03_secure_the_api.adoc[Secure your API] (30 minutes)
+
+- Applying key-auth plugin
+- Applying rate-limiting plugin
+- Create consumers
+- Create API keys
+
+. xref:04_declarative_api_management.adoc[Configuration management with decK] (25 minutes)
+
+- Dumping Kong configuration with decK
+- Changing Kong configuration
+- Diffing and Syncing back Kong configuration
+
+. xref:05_outro.adoc[Outro]

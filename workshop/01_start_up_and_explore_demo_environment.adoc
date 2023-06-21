@@ -1,0 +1,94 @@
+= Lab-01: Start up and explore the demo environment
+
+== Scenario description
+
+In the following labs we'll create a first API in Kong API Gateway.
+
+The API will consist of one Service _echo-svc_ that is exposed using two different Routes _echo-route-basic_ and _echo-route-plus_.
+The idea of having two routes is provide access to the backend API für registered and unregistered API consumers, defining different SLA.
+So, e.g. using _echo-route-basic_ limits the maximum number of API calls to 5 per minute.
+
+From a policy perspective, will use Key-auth plugin to restrict access to _echo-route-plus_.
+Using Rate-limiting plugin, we'll be able to also limit the amount of traffic that hits the backend service.
+
+== Getting started with APIs
+
+Before we can really getting started, with configuring the API, we'll start up and explore the demo environment.
+
+As the demo environment is defined as Docker compose, you need to open a terminal window and issue a respective command to start the environment.
+
+[source,bash]
+----
+docker-compose up -d
+----
+
+While the environment starts, you might have a look into the Docker compose file.
+What happens when executing the command is that (besides downloading the respective Docker images):
+
+- PostgreSQL is started
+- Kong database structure is created
+- Kong API Gateway is started
+
+After a few minutes (depending on your internet connection), you should see that the containers have been started.
+
+[source,bash]
+----
+...
+[+] Running 3/3
+ ✔ Container kong-simple-demo-kong-database-1   Started                                                                                                                                                 0.4s
+ ✔ Container kong-simple-demo-kong-migration-1  Started                                                                                                                                                 0.7s
+ ✔ Container kong-simple-demo-kong-1            Started
+----
+
+Now, it's time to verify the environment is up and running.
+We can simply achieve this by calling Kong API Gateway proxy listen port:
+
+[source,bash]
+----
+http :8000
+----
+
+Kong API Gateway should instantly answer with the following response:
+
+[source,bash]
+----
+HTTP/1.1 404 Not Found
+...
+X-Kong-Response-Latency: 0
+
+{
+    "message": "no Route matched with those values"
+}
+----
+
+The above result means that Kong API Gateway is up and running, but it can not route the request.
+This is the expected behavior as we don't have any API definitions yet.
+
+In addition, we could also use Kong API Gateway's Admin API to learn about the current Gateway configuration.
+
+[source,bash]
+----
+http :8001
+----
+
+The response is a JSON giving you all details, e.g. which plugins are available or information about log file location, etc.
+
+[source,bash]
+----
+HTTP/1.1 200 OK
+...
+X-Kong-Admin-Latency: 6
+X-Kong-Admin-Request-ID: 15WbETNikh4XBk4cUXV1mPeVaVYDTnct
+vary: Origin
+
+{
+    "configuration": {
+        "_debug_pg_ttl_cleanup_interval": 300,
+        "admin_acc_logs": "/usr/local/kong/logs/admin_access.log",
+        "admin_access_log": "logs/admin_access.log", ...
+    },
+    "version": "3.3.0.0"
+}
+----
+
+Last, but not least, you can access http://localhost:8002/manager[Kong Manager UI] using a web browser to also view the current Gateway configuration, including routes and services.

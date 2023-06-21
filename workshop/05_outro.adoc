@@ -1,0 +1,23 @@
+= Kongratulations!
+
+You've finished the Kong 101 workshop!
+
+In this very basic workshop, you learned about the basics with respect to the Kong API Gateway.
+In addition, this workshop has the intention to give you an idea on how easy it is to get started with Kong API Gateway.
+
+In the labs you learned:
+
+. Configuring basic Kong objects like
+- Routes
+- Services
+- Plugins
+- Consumers
+. Securing APIs with
+- Key authentication
+- Rate limiting
+. Using Kong's Admin API (Imperative approach)
+. Using decK to configure Kong (Declarative approach)
+. Basic usage of Kong Manager UI
+
+This workshop is just the beginning, there's so much more to discover.
+If you want to learn more and deep-dive into Kong API Gateway, also in more advanced Kong Enterprise features, you may take a look at https://education.konghq.com/[Kong Education Portal].

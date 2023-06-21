@@ -1,0 +1,7 @@
+= Kong 101 Workshop Repository
+
+Find the workshop material in folder _workshop_.
+
+The _docker-compose.yaml_ contains the environment configuration that is needed to do the labs.
+
+NOTE: Please checkout the xref:workshop/00_prerequisites.adoc[prerequisites]!

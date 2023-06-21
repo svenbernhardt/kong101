@@ -1,0 +1,159 @@
+= Lab-03: Securing the API
+
+What we've done so far is just using Kong as a Reverse proxy.
+We simply passthrough the traffic to the Upstream service.
+In real world scenarios, we don't want everyone to have access to our APIs.
+We want to protect our Upstream services from unauthorized user access or misusage.
+For doing so in Kong, we can configure Plugins that implement policy logic to protect APIs and Upstream services respectively.
+Plugins can be applied globally, on the Route, the Service and the Consumer level.
+
+So, let's get our API secured!
+
+== Lab summary
+
+Within this lab we're going to learn about:
+
+- Consumers and Consumer configuration
+- Key-Auth Plugin configuration
+- Rate-limiting Plugin configuration
+
+== Securing the API with API keys
+
+In a first step, we are going to secure _echo-route-plus_ with the Key-auth plugin.
+Configuring a plugin at the Route level can be done using the Admin API.
+
+[source,bash]
+----
+$ http :8001/routes/echo-route-plus/plugins name=key-auth
+----
+
+After the plugin has been activated, you should no longer be able to invoke _echo-route-plus_.
+You'll still be able to call _echo-route-basic_, as the plugin is only configured for _echo-route-plus_.
+
+[source,bash]
+----
+$ http :8000/echo-plus/v1/test
+
+HTTP/1.1 401 Unauthorized
+...
+{
+    "message": "No API key found in request"
+}
+----
+
+For being able to access the secured route again, we need a valid API key to be included in the API request.
+To create an API key, we first need to create a Consumer object, which represents a consumer - or a user - of a Service.
+Using the Kong Admin API, we'll create a consumer named _mary_.
+
+[source,bash]
+----
+$ http POST :8001/consumers username=mary
+----
+
+After the consumer has been successfully created, we can create a respective API key for this consumer.
+
+[source,bash]
+----
+$ http POST :8001/consumers/mary key=marys-key
+----
+
+NOTE: If, you don't explicitly define the API key for your consumers, Kong will create a random one for you.
+
+Now create another consumer named _peter_ with a respective API key, following the instructions above.
+
+After creating the consumers and the respective keys, test accessing the secured API again.
+You should now be able to access _echo-route-plus_ again.
+
+[source,bash]
+----
+$ http :8000/echo-plus/v1/test apikey:marys-key
+
+$ http :8000/echo-plus/v1/test apikey:peters-key
+----
+
+Both calls should give you an HTTP 200 status code now.
+Now we secured the echo-plus route.
+
+As a next step, we wanted to secure our service from overload.
+For this purpose, the https://docs.konghq.com/hub/kong-inc/rate-limiting/[rate-limiting plugin] can be used, which limits the maximum number of calls over a defined period.
+We're going to configure the plugin in two different places:
+
+- *echo-svc* for defining a general rate-limit for the echo-svc
+- *echo-basic-route* for defining a rate-limit for unregistered API consumers
+
+First of all, let's start to ensure that unregistered users can just do 5 service calls per second.
+
+[source,bash]
+----
+$ http POST :8001/services/echo-route-basic/plugins name=rate-limiting 'config[minute]:=5'
+----
+
+NOTE: The rate-limiting plugin provides more configuration options.
+In this example we'll stick with the defaults, that you can also view in the Kong Manager UI.
+
+When we do calls to the calls to _echo-route-basic_ after applying the plugin, additional response headers can be noticed.
+Additional information about these headers can be found in the https://docs.konghq.com/hub/kong-inc/rate-limiting/[plugin documentation].
+
+[source,bash]
+----
+$ http :8000/echo-basic/v1/test
+
+HTTP/1.1 200 OK
+...
+RateLimit-Limit: 5
+RateLimit-Remaining: 4
+RateLimit-Reset: 49
+X-RateLimit-Limit-Minute: 5
+X-RateLimit-Remaining-Minute: 4
+...
+----
+
+If we hit the API for another five times now, we should see an error, which tells us that the rate limit has been exceeded.
+
+[source,bash]
+----
+$ http :8000/echo-basic/v1/test
+
+HTTP/1.1 429 Too Many Requests
+...
+RateLimit-Limit: 5
+RateLimit-Remaining: 0
+...
+----
+
+Next, we're going to apply a general rate limit on the _echo-svc_, so that we can protect our backend service from being overloaded.
+The rate-limit configuration should be set to a maximum of 30 requests per second.
+
+[source,bash]
+----
+$ http POST :8001/services/echo-svc/plugins name=rate-limiting 'config[minutes]:=30'
+----
+
+When you call the _echo-plus_ route now, you'll also find the response headers set by the rate-limiting plugin, but with a different limit configuration.
+
+[source,bash]
+----
+$ http :8000/echo-plus/v1/test apikey:marys-key
+
+HTTP/1.1 200 OK
+...
+RateLimit-Limit: 30
+RateLimit-Remaining: 29
+RateLimit-Reset: 13
+X-RateLimit-Limit-Minute: 30
+X-RateLimit-Remaining-Minute: 29
+...
+----
+
+As the plugin aggregates the limits based on the consumer per default, our created consumers each have their limits.
+So, if you do the call with Peter's API key, you'll see an independent limit counter.
+The rate limit that we configured for _echo-route-basic_ stays untouched.
+Unregistered consumers for this route will still have a maximum of 5 calls per minute.
+
+== Bonus challenge: Change the Key-auth plugin config using the Admin API
+
+After applying the Key-auth plugin, you may have been noticed that the API key is sent to the upstream service.
+Maybe this is not desired for security reasons.
+
+Update the key-auth plugin, so that the API key is no longer forwarded to the upstream service.
+

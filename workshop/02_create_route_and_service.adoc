@@ -1,0 +1,118 @@
+= Lab-02: Create routes and a service
+
+After we've ensured that the demo environment is up and running we can start configuring a first test API.
+
+== Lab summary
+
+Within this lab, we'll create a simple passthrough API that takes a request and directly routes it to the Upstream service.
+As Upstream service we're using a simple echo-server, which has already been started, while starting the demo environment.
+You can test it by submitting a direct call to the service:
+
+[source,bash]
+----
+$ http :8080/test
+
+HTTP/1.1 200 OK
+...
+
+Request served by 490dade54f7b
+
+GET /test HTTP/1.1
+
+Host: localhost:8080
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+User-Agent: HTTPie/3.2.1
+----
+
+In this first lab, we'll learn about:
+
+- Creating Services
+- Creating Routes
+- Familiarizing with Kong Admin API
+
+== Create a first API
+
+Configuring a new API in Kong basically means to configure routes and services.
+Services are abstractions of a concrete Upstream service.
+Routes are matching rules for client request that hit the Kong Proxy.
+A route is associated with a service and one service could have multiple routes.
+More details on Route and Service objects can be found in https://docs.konghq.com/gateway/latest/admin-api[Kong's Admin API documentation].
+
+NOTE: A Kong Admin API spec, in form of an OpenAPI spec is now available (BETA status!). This can also be imported to Insomnia and helps to explore as well as understand the Admin API.
+
+We start with defining the service, which points to the upstream echo server.
+Therefore we need to define a name and a URL.
+Further properties that can be set for a Service object are documented in the Kong Admin API documentation.
+
+[source,bash]
+----
+$ http POST :8001/services name=echo-svc url=http://echoserver:8080
+----
+
+This command should give you a 201 and the resulting service definition.
+Next step is, to create a first route _echo-route-plus_ for the service we just created.
+For defining a route definition, we just need to define the name and a path under which the route is exposed on the Kong proxy.
+
+[source,bash]
+----
+$ http POST :8001/services/echo-svc/routes name=echo-route-plus paths:='["/echo-plus/v1"]'
+----
+
+Again, this command should give you an HTTP status code 201 with the corresponding route definition.
+Now, create another route for service _echo_svc_ named _echo-route-basic_ with path _/echo_plus/v1_.
+
+Now it's time to review, what you've done so far.
+There are different ways to do so, e.g. by using the Admin API.
+
+[source,bash]
+----
+# List all services
+$ http :8001/services
+
+# List all routes for service echo-svc
+$ http :8001/services/echo-svc/routes
+
+# List all routes
+$ http :8001/routes
+----
+
+Another way would be to use http://localhost:8002/manager[Kong Manager UI].
+Go to the UI and review the configurations you just did with the calls above.
+
+After you've reviewed your work, the API should be validated by calling it via your HTTP-Client of choice.
+Remember that we exposed the same service using the two different routes _echo-route-plus_ and _echo-route-basic_!
+
+[source,bash]
+----
+$ http :8000/echo-plus/v1/test
+
+$ http :8000/echo-basic/v1/test
+
+HTTP/1.1 200 OK
+...
+X-Kong-Proxy-Latency: 0
+X-Kong-Upstream-Latency: 0
+
+Request served by 490dade54f7b
+
+GET /test HTTP/1.1
+
+Host: echoserver:8080
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+User-Agent: HTTPie/3.2.1
+X-Forwarded-For: 172.18.0.1
+X-Forwarded-Host: localhost
+X-Forwarded-Path: /echo-basic/v1/test
+X-Forwarded-Port: 8000
+X-Forwarded-Prefix: /echo-basic/v1
+X-Forwarded-Proto: http
+X-Real-Ip: 172.18.0.1
+----
+
+Note: New headers have been injected by the Kong API Gateway.
+
+That's it for this first basic lab, where we created a new API in Kong API Gateway.

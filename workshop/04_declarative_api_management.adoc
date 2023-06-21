@@ -1,0 +1,162 @@
+= Lab-04: Declarative configuration management with decK
+
+So far, we used the Kong Admin API to define Kong objects, like Services, Routes or Plugins.
+For doing simple things like we did, this imperative way to change the API Gateway and API configuration might be applicable.
+But what happens, if we think in the direction of automating deployments to the Gateway and doing fine-grained updates to certain objects?
+
+https://docs.konghq.com/deck/latest/[decK] is a tool that allows for declarative configuration management. Basically, decK works on configuration files in a YAML syntax and provides powerful functionalities like diffing, dumping or syncing configurations.
+decK is the recommended tool when it comes to automating API deployments in CI/CD pipelines.
+
+NOTE: Not all entities can be managed using decK! Find the limitations in the https://docs.konghq.com/deck/latest/reference/entities/[documentation].
+
+== Lab summary
+
+In this lab you'll learn how decK works and how powerful this tiny CLI tool is.
+
+Within this lab we're going to learn about:
+
+- Dumping the current Kong configuration
+- Changing the configuration
+- Diffing the configuration
+- Syncing the configuration back
+
+== Changing the configuration with decK
+
+First of all, it must be ensured that you have the latest version of decK installed.
+
+[source,bash]
+----
+$ deck version
+
+decK v1.22.0 (7447a09)
+----
+
+To ensure deck can connect to Kong API Gateway use the ping command.
+
+[source,bash]
+----
+$ deck ping
+
+Successfully connected to Kong!
+Kong version:  3.3.0.0
+----
+
+NOTE: Per default decK tries to reach Kong using http://localhost:8001.
+To change this behavior, you must define a decK config file _$HOME/.deck.yaml_ or using the flag _--kong-addr_.
+
+So, we ensured that we can connect to our Kong instance.
+Now, it's time to pull the current configuration from the Gateway.
+
+[source,bash]
+----
+$ deck dump
+----
+
+The command above creates a file, named _kong.yaml_, in your current working directory that contains the entire Gateway configuration.
+Take a few minutes to review the file and then edit the file, e.g. change the maximum amount of requests on _echo-route-basic_ to 10.
+
+After changing _kong.yaml_, you should ensure that the configuration file is still valid.
+
+[source,bash]
+----
+$ deck validate
+----
+
+No output means that everything is fine with the configuration.
+Otherwise, decK will prompt you with the respective errors.
+
+When the configuration file is valid after the change, you can check the current configuration available on the Gateway against the local configuration.
+
+[source,bash]
+----
+$ deck diff
+
+updating plugin rate-limiting for route echo-route-basic  {
+...
+-    "minute": 5,
++    "minute": 10,
+...}
+
+Summary:
+  Created: 0
+  Updated: 1
+  Deleted: 0
+----
+
+As expected, we see a change in form of an update on the rate-limiting plugin for _echo-route-basic_ (except you changed something else).
+Independently of what was changed, the new configuration can be synced back to the API Gateway.
+
+[source,bash]
+----
+$ deck sync
+
+updating plugin rate-limiting for route echo-route-basic  {
+...
+-    "minute": 5,
++    "minute": 10,
+...}
+
+Summary:
+  Created: 0
+  Updated: 1
+  Deleted: 0
+----
+
+Doing a diff again shows, that the local and the server configuration are in sync now.
+
+[source,bash]
+----
+$ deck diff
+
+Summary:
+  Created: 0
+  Updated: 0
+  Deleted: 0
+----
+
+To validate that the changes have been successfully on the server side, we can the current plugin configuration in http://localhost:8002/manager[Kong Manager UI].
+
+In addition, we can also do test calls to the _echo-route-basic_ and validate the rate-limiting headers that are returned in the Kong response.
+
+[source,bash]
+----
+$ http :8000/echo-basic/v1/test
+
+HTTP/1.1 200 OK
+...
+RateLimit-Limit: 10
+RateLimit-Remaining: 9
+RateLimit-Reset: 53
+...
+----
+
+As it can be seen from the response headers, the change of the plugin configuration was successful.
+
+== Bonus challenge: Make Kong objects filterable for decK by adding tags
+
+Changing Kong configurations with decK is simply and intuitive, as you've seen in this quite simple scenario.
+But what if we have to deal with a Kong Gateway deployment with hundreds or thousands of APIs deployed to it?
+The resulting _kong.yaml_ file when doing a _decK dump_ wouldn't be fun to maintain.
+
+For such use cases Kong provides the possibility to structure Kong objects by so called tags that can be defined for each object.
+If you use tags consistently when creating Kong resources, which is a recommendation, you can tell decK to just dump resources with a specific tag.
+
+Tasks:
+
+. Make a copy of your current local decK configuration file (you'll need it in the last step)
+. Use decK to add tags to routes, services and plugins (use tag name _echo-api_)
+. Diff and sync your changes to the server
+. Check the configuration changes in http://localhost:8002/manager[Kong Manager UI]
+. Dump the config and filter by tag (Hint: use the flag _--select-tag_)
+. Compare the new configuration dump in _kong.yaml_ with the one you did copied at the beginning; what are the differences?
+
+
+
+
+
+
+
+
+
+
+

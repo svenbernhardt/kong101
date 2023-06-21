@@ -1,0 +1,16 @@
+= Attendee prerequisites
+
+To make the most out of the *Kong 101 - Getting started with Kong API Gateway* workshop, attendees are expected to meet the following requirements:
+
+. Familiarity with containerization: A basic understanding of Docker and containerization concepts is essential, as the workshop will is build upon a containerized infrastructure.
+
+. Pre-installed software and tools: Ensure that the following tools are installed and set up on your local machine before attending the workshop:
+
+- https://www.docker.com/products/docker-desktop/[Docker Desktop (latest version)]
+- Alternatively https://rancherdesktop.io/[Rancher Desktop] or Native Docker (if running on Linux system)
+- https://insomnia.rest/[Insomnia (latest version)] or other HTTP client like curl or https://httpie.io/cli[HTTPie]
+- https://docs.konghq.com/deck/latest/installation/#main[decK (latest version)]
+
+. Operating system: Attendees should preferably bring a laptop with a Linux or macOS operating system. Ensure that you have a stable internet connection for the workshop’s duration or make sure to download the required Docker images before the workshop.
+
+. Active participation: Attendees are expected to actively engage in hands-on exercises and discussions throughout the workshop to maximize learning and gain practical experience with service mesh technologies.
