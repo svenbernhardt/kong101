@@ -61,7 +61,7 @@ $ http POST :8001/services/echo-svc/routes name=echo-route-plus paths:='["/echo-
 ----
 
 Again, this command should give you an HTTP status code 201 with the corresponding route definition.
-Now, create another route for service _echo_svc_ named _echo-route-basic_ with path _/echo_plus/v1_.
+Now, create another route for service _echo-svc_ named _echo-route-basic_ with path _/echo-basic/v1_.
 
 Now it's time to review, what you've done so far.
 There are different ways to do so, e.g. by using the Admin API.

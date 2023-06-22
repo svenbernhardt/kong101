@@ -54,7 +54,7 @@ After the consumer has been successfully created, we can create a respective API
 
 [source,bash]
 ----
-$ http POST :8001/consumers/mary key=marys-key
+$ http POST :8001/consumers/mary/key-auth key=marys-key
 ----
 
 NOTE: If, you don't explicitly define the API key for your consumers, Kong will create a random one for you.
@@ -85,7 +85,7 @@ First of all, let's start to ensure that unregistered users can just do 5 servic
 
 [source,bash]
 ----
-$ http POST :8001/services/echo-route-basic/plugins name=rate-limiting 'config[minute]:=5'
+$ http POST :8001/routes/echo-route-basic/plugins name=rate-limiting 'config[minute]:=5'
 ----
 
 NOTE: The rate-limiting plugin provides more configuration options.
@@ -126,7 +126,7 @@ The rate-limit configuration should be set to a maximum of 30 requests per secon
 
 [source,bash]
 ----
-$ http POST :8001/services/echo-svc/plugins name=rate-limiting 'config[minutes]:=30'
+$ http POST :8001/services/echo-svc/plugins name=rate-limiting 'config[minute]:=30'
 ----
 
 When you call the _echo-plus_ route now, you'll also find the response headers set by the rate-limiting plugin, but with a different limit configuration.
